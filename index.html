@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<title>店舗から発着場までのご案内</title>
+<style>
+  :root{
+    --bg:#0b0d10;
+    --accent:#4fd3ff;
+    --dot:rgba(255,255,255,.35);
+    --dot-active:#ffffff;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{
+    margin:0; padding:0; height:100%; background:var(--bg);
+    overflow:hidden; font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;
+    color:#fff; user-select:none;
+  }
+  #app{position:fixed; inset:0; display:flex; flex-direction:column;}
+
+  header{
+    position:relative; z-index:5; padding:14px 16px 10px;
+    display:flex; align-items:center; justify-content:space-between;
+    background:linear-gradient(to bottom, rgba(0,0,0,.55), rgba(0,0,0,0));
+  }
+  header .title{font-size:14px; font-weight:600; letter-spacing:.02em; opacity:.9;}
+  header .count{font-size:13px; opacity:.75; font-variant-numeric:tabular-nums;}
+
+  #track{
+    flex:1; position:relative; display:flex; height:100%;
+    transition:transform .32s cubic-bezier(.22,.61,.36,1);
+    will-change:transform;
+  }
+  #track.dragging{transition:none;}
+  .slide{
+    flex:0 0 100%; height:100%; display:flex; align-items:center; justify-content:center;
+    position:relative; background:#000;
+  }
+  .slide img{
+    width:100%; height:100%; object-fit:contain; pointer-events:none; display:block;
+  }
+  .goal-badge{
+    position:absolute; left:50%; bottom:96px; transform:translateX(-50%);
+    background:var(--accent); color:#04202a; font-weight:700;
+    padding:9px 22px; border-radius:999px; font-size:14px; letter-spacing:.05em;
+    box-shadow:0 4px 16px rgba(79,211,255,.4);
+  }
+  .caption{
+    position:absolute; left:12px; right:12px; top:12px; z-index:4;
+    display:flex; align-items:center; gap:10px;
+    background:rgba(0,0,0,.6); backdrop-filter:blur(2px);
+    border:1px solid rgba(255,255,255,.15);
+    border-radius:14px; padding:10px 14px;
+  }
+  .caption .num{
+    flex:0 0 auto; width:24px; height:24px; border-radius:50%;
+    background:var(--accent); color:#04202a; font-weight:700; font-size:12px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .caption p{margin:0; font-size:14px; line-height:1.4; font-weight:600;}
+  .caption .en{display:block; font-size:11.5px; font-weight:400; opacity:.75; margin-top:2px;}
+
+  footer{
+    position:relative; z-index:5; padding:10px 0 max(14px, env(safe-area-inset-bottom));
+    display:flex; justify-content:center; gap:6px; flex-wrap:wrap; padding-left:20px; padding-right:20px;
+    background:linear-gradient(to top, rgba(0,0,0,.55), rgba(0,0,0,0));
+  }
+  .dot{width:6px; height:6px; border-radius:50%; background:var(--dot); transition:background .2s, transform .2s;}
+  .dot.active{background:var(--dot-active); transform:scale(1.3);}
+
+  .nav-btn{
+    position:absolute; top:50%; transform:translateY(-50%); z-index:6;
+    width:40px; height:40px; border-radius:50%; border:none;
+    background:rgba(0,0,0,.35); color:#fff; font-size:18px; line-height:40px; text-align:center;
+    cursor:pointer;
+  }
+  .nav-btn.prev{left:10px;}
+  .nav-btn.next{right:10px;}
+  .nav-btn:disabled{opacity:0; pointer-events:none;}
+
+  #hint{
+    position:absolute; left:0; right:0; bottom:70px; z-index:8;
+    display:flex; justify-content:center; pointer-events:none;
+    opacity:1; transition:opacity .5s ease;
+  }
+  #hint.hide{opacity:0;}
+  #hint span{
+    background:rgba(0,0,0,.6); padding:9px 16px; border-radius:999px; font-size:12.5px;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="title">貸渡位置までのご案内</div>
+    <div class="count"><span id="cur">1</span> / <span id="total">13</span></div>
+  </header>
+
+  <div id="viewport" style="position:relative; flex:1; overflow:hidden;">
+    <div id="track">
+      <div class="slide">
+        <img src="images/01.jpg" alt="手順1">
+        <div class="caption"><span class="num">1</span><p>店舗を出て、左に曲がります。<span class="en">(Exit the store and turn left.)</span></p></div>
+      </div>
+      <div class="slide">
+        <img src="images/02.jpg" alt="手順2">
+        <div class="caption"><span class="num">2</span><p>建物の角を左へ曲がります<span class="en">(Turn left at the corner of the building.)</span></p></div>
+      </div>
+      <div class="slide">
+        <img src="images/03.jpg" alt="手順3">
+        <div class="caption"><span class="num">3</span><p>「MUZA川崎」の入口から中へ入ります<span class="en">(Enter through the "MUZA Kawasaki" entrance.)</span></p></div>
+      </div>
+      <div class="slide">
+        <img src="images/04.jpg" alt="手順4">
+        <div class="caption"><span class="num">4</span><p>通路をまっすぐ進みます<span class="en">(Go straight through the corridor.)</span></p></div>
+      </div>
+      <div class="slide">
+        <img src="images/05.jpg" alt="手順5">
+        <div class="caption"><span class="num">5</span><p>「リンガーハット」の看板が見えたら右へ進みます<span class="en">(Turn right when you see the "Ringer Hut" sign.)</span></p></div>
+      </div>
+      <div class="slide">
+        <img src="images/06.jpg" alt="手順6">
+        <div class="caption"><span class="num">6</span><p>広場をまっすぐ進みます<span class="en">(Go straight through the plaza.)</span></p></div>
+      </div>
+      <div class="slide">
+        <img src="images/07.jpg" alt="手順7">
+        <div class="caption"><span class="num">7</span><p>そのまま通路をまっすぐ進みます<span class="en">(Continue straight through the corridor.)</span></p></div>
+      </div>
+      <div class="slide">
+        <img src="images/08.jpg" alt="手順8">
+        <div class="caption"><span class="num">8</span><p>右手のエレベーターで地下1階(B1)へ向かいます<span class="en">(Take the elevator on your right down to basement level 1 (B1).)</span></p></div>
+      </div>
+      <div class="slide">
+        <img src="images/09.jpg" alt="手順9">
+        <div class="caption"><span class="num">9</span><p>地下1階(B1)へ降りたらまっすぐ進みます<span class="en">(After reaching B1, go straight.)</span></p></div>
+      </div>
+      <div class="slide">
+        <img src="images/10.jpg" alt="手順10">
+        <div class="caption"><span class="num">10</span><p>正面の自動ドアを出て左へ進みます<span class="en">(Exit through the automatic door ahead and turn left.)</span></p></div>
+      </div>
+      <div class="slide">
+        <img src="images/11.jpg" alt="手順11">
+        <div class="caption"><span class="num">11</span><p>案内表示に従って右へ進みます<span class="en">(Follow the signs and turn right.)</span></p></div>
+      </div>
+      <div class="slide">
+        <img src="images/12.jpg" alt="手順12">
+        <div class="caption"><span class="num">12</span><p>駐車場内をまっすぐお進みください<span class="en">(Continue straight through the parking area.)</span></p></div>
+      </div>
+      <div class="slide">
+        <img src="images/13.jpg" alt="手順13">
+        <div class="caption"><span class="num">13</span><p>スタッフが車両とともにお待ちしております<span class="en">(Our staff will be waiting for you with your vehicle.)</span></p></div>
+        <span class="goal-badge">まもなく到着です</span>
+      </div>
+    </div>
+
+    <button class="nav-btn prev" id="prevBtn">‹</button>
+    <button class="nav-btn next" id="nextBtn">›</button>
+
+    <div id="hint"><span>左右にスワイプして進んでください →</span></div>
+  </div>
+
+  <footer id="dots"></footer>
+</div>
+
+<script>
+(function(){
+  const viewport = document.getElementById('viewport');
+  const track = document.getElementById('track');
+  const slides = document.querySelectorAll('.slide');
+  const n = slides.length;
+  const dotsWrap = document.getElementById('dots');
+  const curEl = document.getElementById('cur');
+  const totalEl = document.getElementById('total');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const hint = document.getElementById('hint');
+  let index = 0;
+  let startX = 0, deltaX = 0, dragging = false, width = window.innerWidth;
+  let pointerId = null;
+
+  totalEl.textContent = n;
+  for(let i=0;i<n;i++){
+    const d = document.createElement('div');
+    d.className = 'dot' + (i===0 ? ' active' : '');
+    dotsWrap.appendChild(d);
+  }
+  const dots = dotsWrap.querySelectorAll('.dot');
+
+  function render(animate){
+    track.classList.toggle('dragging', !animate);
+    track.style.transform = 'translateX(' + (-index * width) + 'px)';
+    dots.forEach((d,i)=> d.classList.toggle('active', i===index));
+    curEl.textContent = index+1;
+    prevBtn.disabled = index === 0;
+    nextBtn.disabled = index === n-1;
+  }
+
+  function goTo(i){
+    index = Math.max(0, Math.min(n-1, i));
+    render(true);
+    hint.classList.add('hide');
+  }
+
+  window.addEventListener('resize', ()=>{ width = window.innerWidth; render(false); });
+
+  prevBtn.addEventListener('click', ()=> goTo(index-1));
+  nextBtn.addEventListener('click', ()=> goTo(index+1));
+
+  document.addEventListener('keydown', (e)=>{
+    if(e.key === 'ArrowRight') goTo(index+1);
+    if(e.key === 'ArrowLeft') goTo(index-1);
+  });
+
+  viewport.addEventListener('pointerdown', (e)=>{
+    if(e.target.closest('.nav-btn')) return;
+    dragging = true;
+    startX = e.clientX;
+    deltaX = 0;
+    pointerId = e.pointerId;
+    viewport.setPointerCapture(pointerId);
+  });
+
+  viewport.addEventListener('pointermove', (e)=>{
+    if(!dragging || e.pointerId !== pointerId) return;
+    deltaX = e.clientX - startX;
+    track.classList.add('dragging');
+    track.style.transform = 'translateX(' + (-index*width + deltaX) + 'px)';
+  });
+
+  function endDrag(e){
+    if(!dragging || e.pointerId !== pointerId) return;
+    dragging = false;
+    hint.classList.add('hide');
+    if(Math.abs(deltaX) > width*0.15){
+      goTo(index + (deltaX < 0 ? 1 : -1));
+    } else if(Math.abs(deltaX) < 6){
+      goTo(index + (startX > width/2 ? 1 : -1));
+    } else {
+      render(true);
+    }
+    deltaX = 0;
+  }
+  viewport.addEventListener('pointerup', endDrag);
+  viewport.addEventListener('pointercancel', endDrag);
+
+  setTimeout(()=> hint.classList.add('hide'), 3200);
+  render(false);
+})();
+</script>
+</body>
+</html>
