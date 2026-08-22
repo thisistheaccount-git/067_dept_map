@@ -132,7 +132,7 @@
     </svg>
   </div>
 
-  <div id="viewport" style="position:relative; flex:1; overflow:hidden;">
+  <div id="viewport" style="position:relative; flex:1; overflow:hidden; touch-action:none;">
     <div id="track">
       <div class="slide">
         <img src="images/01.jpg" alt="手順1">
@@ -216,7 +216,7 @@
   const TENANT_H_FULL=95, TENANT_H_HALF=47.5, WALL_H=45, ROUTE_Z_BASE=110;
 
   const cfg={startColor:"#5fe1ff", startWidth:5.1, goalColor:"#e56cff", goalWidth:5.1,
-             numSize:40, curSize:64, routeWidth:7.5, routeColor:"#5fe1ff", tenantColor:"#545454"};
+             numSize:55, curSize:72, routeWidth:7.5, routeColor:"#5fe1ff", tenantColor:"#545454"};
   const routePts=[[-258, 370], [-291, 450], [-104, 391], [48, 330], [-242, 101], [-133, -5], [116, -124], [369, -283], [475, -184]];
   const numPos={1:{tx:-301, ty:456}, 2:{tx:-116, ty:399}, 3:{tx:57, ty:334}, 4:{tx:-83, ty:202}, 5:{tx:-233, ty:89}, 6:{tx:-133, ty:-15}, 7:{tx:112, ty:-118}, 8:{tx:356, ty:-265}};
 
@@ -286,6 +286,13 @@
   }
 
   const pinEls={};
+  function setPinSize(n, r){
+    const p = pinEls[n];
+    if(!p) return;
+    p.halo.setAttribute('r', r+8);
+    p.circle.setAttribute('r', r);
+    p.text.style.fontSize = (r*0.86)+'px';
+  }
   function renderNums(){
     for(let n=1;n<=8;n++){
       const [wx,wy] = NUMBERS_WORLD[n];
@@ -295,12 +302,13 @@
       numsLayer.appendChild(el('line',{class:'num-leader', x1:bx,y1:by,x2:st.tx,y2:st.ty,
         stroke:'rgba(95,225,255,.5)', 'stroke-width':1.4, 'stroke-dasharray':'1.5 3'}));
       const grp=el('g',{class:'pin', transform:`translate(${st.tx},${st.ty})`});
-      grp.appendChild(el('circle',{class:'halo', r:r+8}));
-      grp.appendChild(el('circle',{r:r}));
+      const halo=el('circle',{class:'halo', r:r+8});
+      const circle=el('circle',{r:r});
       const t=el('text',{'dominant-baseline':'central', y:1, style:`font-size:${r*0.86}px`});
       t.textContent=n;
-      grp.appendChild(t);
+      grp.appendChild(halo); grp.appendChild(circle); grp.appendChild(t);
       numsLayer.appendChild(grp);
+      grp.halo=halo; grp.circle=circle; grp.text=t;
       pinEls[n]=grp;
     }
   }
@@ -314,9 +322,10 @@
   let curPinN = null;
   window.setMapCurrent = function(stepNum){
     // stepNum: 1-13. Map only covers 1F (1-8). For 9-13 (B1) no pin is highlighted yet.
-    if(curPinN!=null && pinEls[curPinN]){ pinEls[curPinN].classList.remove('current'); }
+    if(curPinN!=null && pinEls[curPinN]){ pinEls[curPinN].classList.remove('current'); setPinSize(curPinN, cfg.numSize); }
     if(stepNum>=1 && stepNum<=8 && pinEls[stepNum]){
       pinEls[stepNum].classList.add('current');
+      setPinSize(stepNum, cfg.curSize);
       numsLayer.appendChild(pinEls[stepNum]); // bring to front
       curPinN=stepNum;
     } else {
@@ -383,6 +392,7 @@
     deltaX = 0;
     pointerId = e.pointerId;
     viewport.setPointerCapture(pointerId);
+    e.preventDefault();
   });
 
   viewport.addEventListener('pointermove', (e)=>{
@@ -390,6 +400,7 @@
     deltaX = e.clientX - startX;
     track.classList.add('dragging');
     track.style.transform = 'translateX(' + (-index*width + deltaX) + 'px)';
+    e.preventDefault();
   });
 
   function endDrag(e){
