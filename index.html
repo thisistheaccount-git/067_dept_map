@@ -4,35 +4,49 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
 <title>店舗から発着場までのご案内</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#0b0d10;
     --accent:#4fd3ff;
-    --accent-glass: rgba(37,110,140,0.42);
-    --accent-border: rgba(150,225,255,0.4);
-    --glass-bg: rgba(20,20,22,0.5);
-    --glass-border: rgba(255,255,255,0.14);
     --dot:rgba(255,255,255,.35);
+    --dot-active:#ffffff;
+    --tenantColor:#545454;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{
     margin:0; padding:0; height:100%; background:var(--bg);
-    overflow:hidden; font-family:'Noto Sans JP','Hiragino Sans','Yu Gothic',sans-serif;
+    overflow:hidden; font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;
     color:#fff; user-select:none;
   }
-  .en, .num, .count{ font-family:'Inter','Noto Sans JP',sans-serif; }
   #app{position:fixed; inset:0; display:flex; flex-direction:column;}
 
   header{
-    position:relative; z-index:5; padding:12px 16px 9px;
+    position:relative; z-index:5; padding:10px 16px 7px;
     display:flex; align-items:center; justify-content:space-between;
-    background:linear-gradient(to bottom, rgba(0,0,0,.62), rgba(0,0,0,0));
+    background:#000;
+    flex:0 0 auto;
   }
-  header .title{font-size:13px; font-weight:600; letter-spacing:.02em; opacity:.92; line-height:1.4;}
-  header .count{font-size:12px; opacity:.6; padding-top:1px;}
+  header .title{font-size:13px; font-weight:600; letter-spacing:.02em; opacity:.9; line-height:1.38;}
+  header .count{font-size:12.5px; opacity:.7; font-variant-numeric:tabular-nums; padding-top:1px;}
+
+  /* ---- map panel ---- */
+  #mapPanel{
+    flex:0 0 auto; position:relative; height:34vh; min-height:190px; max-height:260px;
+    background:#000; border-bottom:1px solid rgba(255,255,255,.06);
+    overflow:hidden;
+  }
+  #mapPanel svg{width:100%; height:100%; display:block;}
+  .neon-line{stroke:var(--tenantColor);stroke-width:1.6;filter:drop-shadow(0 0 3px var(--tenantColor));}
+  .neon-top-outline{fill:none;stroke:var(--tenantColor);stroke-width:1.8;stroke-linejoin:round;filter:drop-shadow(0 0 4px var(--tenantColor));}
+  .neon-line-dim{stroke:var(--tenantColor);stroke-width:1.2;opacity:.45;}
+  .neon-top-outline-dim{fill:none;stroke:var(--tenantColor);stroke-width:1.3;opacity:.45;}
+  .pin .halo{fill:rgba(95,225,255,.14);}
+  .pin circle:not(.halo){fill:#04141a;stroke:#5fe1ff;stroke-width:2.2;filter:drop-shadow(0 0 6px rgba(95,225,255,.8));}
+  .pin text{fill:#fff;font:800 30px Inter,sans-serif;text-anchor:middle;user-select:none;}
+  .pin.current .halo{fill:rgba(95,225,255,.25);}
+  .pin.current circle:not(.halo){fill:#5fe1ff;stroke:#eaffff;stroke-width:2.4;filter:drop-shadow(0 0 18px rgba(95,225,255,1));}
+  .pin.current text{fill:#02141c;}
+  .pin{transition:transform .25s ease;}
 
   #track{
     flex:1; position:relative; display:flex; height:100%;
@@ -48,56 +62,54 @@
     width:100%; height:100%; object-fit:contain; pointer-events:none; display:block;
   }
   .goal-badge{
-    position:absolute; left:50%; bottom:104px; transform:translateX(-50%);
+    position:absolute; left:50%; bottom:96px; transform:translateX(-50%);
     background:var(--accent); color:#04202a; font-weight:700;
     padding:9px 22px; border-radius:999px; font-size:14px; letter-spacing:.05em;
     box-shadow:0 4px 16px rgba(79,211,255,.4);
   }
   .caption{
-    position:absolute; left:12px; right:12px; bottom:78px; z-index:4;
-    display:flex; align-items:flex-start; gap:14px;
-    background:var(--glass-bg); backdrop-filter:blur(18px) saturate(160%); -webkit-backdrop-filter:blur(18px) saturate(160%);
-    border:1px solid var(--glass-border);
-    border-radius:20px; padding:16px 18px;
-    box-shadow:0 8px 30px rgba(0,0,0,.35);
+    position:absolute; left:12px; right:12px; top:12px; z-index:4;
+    display:flex; align-items:flex-start; gap:10px;
+    background:rgba(0,0,0,.6); backdrop-filter:blur(6px);
+    border:1px solid rgba(255,255,255,.15);
+    border-radius:14px; padding:10px 14px;
+    box-shadow:0 4px 20px rgba(0,0,0,.35);
   }
   .caption .num{
-    flex:0 0 auto; width:30px; height:30px; border-radius:50%;
-    background:var(--accent); color:#04202a; font-weight:800; font-size:14px;
+    flex:0 0 auto; width:24px; height:24px; border-radius:50%;
+    background:var(--accent); color:#04202a; font-weight:700; font-size:12px;
     display:flex; align-items:center; justify-content:center;
     margin-top:1px;
   }
-  .caption p{margin:0; font-size:16px; line-height:1.45; font-weight:600;}
-  .caption .en{display:block; font-size:12.5px; font-weight:400; opacity:.62; margin-top:4px;}
+  .caption p{margin:0; font-size:16px; line-height:1.4; font-weight:600;}
+  .caption .en{display:block; font-size:13px; font-weight:400; opacity:.75; margin-top:3px;}
 
   footer{
-    position:relative; z-index:5; padding:12px 0 max(16px, env(safe-area-inset-bottom));
+    position:relative; z-index:5; padding:10px 0 max(14px, env(safe-area-inset-bottom));
     display:flex; justify-content:center; gap:6px; flex-wrap:wrap; padding-left:20px; padding-right:20px;
+    background:#000; flex:0 0 auto;
   }
   .dot{width:6px; height:6px; border-radius:50%; background:var(--dot); transition:background .2s, transform .2s;}
-  .dot.active{background:var(--accent); transform:scale(1.3); box-shadow:0 0 6px rgba(79,211,255,.6);}
+  .dot.active{background:var(--dot-active); transform:scale(1.3); box-shadow:0 0 6px rgba(255,255,255,.6);}
 
   .nav-btn{
     position:absolute; top:50%; transform:translateY(-50%); z-index:6;
-    width:42px; height:42px; border-radius:50%; border:1px solid var(--glass-border);
-    background:var(--glass-bg); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
-    color:#fff; display:flex; align-items:center; justify-content:center;
+    width:40px; height:40px; border-radius:50%; border:1px solid rgba(255,255,255,.18);
+    background:rgba(0,0,0,.4); backdrop-filter:blur(4px); color:#fff; font-size:18px; line-height:38px; text-align:center;
     cursor:pointer;
   }
-  .nav-btn svg{width:18px; height:18px; stroke:#fff; fill:none; stroke-width:2;}
   .nav-btn.prev{left:10px;}
   .nav-btn.next{right:10px;}
   .nav-btn:disabled{opacity:0; pointer-events:none;}
 
   #hint{
-    position:absolute; left:0; right:0; bottom:190px; z-index:8;
+    position:absolute; left:0; right:0; bottom:70px; z-index:8;
     display:flex; justify-content:center; pointer-events:none;
     opacity:1; transition:opacity .5s ease;
   }
   #hint.hide{opacity:0;}
   #hint span{
-    background:var(--glass-bg); backdrop-filter:blur(10px); border:1px solid var(--glass-border);
-    padding:9px 16px; border-radius:999px; font-size:12.5px;
+    background:rgba(0,0,0,.6); padding:9px 16px; border-radius:999px; font-size:12.5px;
   }
 </style>
 </head>
@@ -108,7 +120,19 @@
     <div class="count"><span id="cur">1</span> / <span id="total">13</span></div>
   </header>
 
-  <div id="viewport" style="position:relative; flex:1; overflow:hidden; touch-action:none;">
+  <div id="mapPanel">
+    <svg id="mapSvg" viewBox="-1100 -520 2200 1120" preserveAspectRatio="xMidYMid meet">
+      <g id="root">
+        <g id="buildLayer"></g>
+        <g id="startLayer"></g>
+        <g id="goalLayer"></g>
+        <g id="routeLayer"></g>
+        <g id="numsLayer"></g>
+      </g>
+    </svg>
+  </div>
+
+  <div id="viewport" style="position:relative; flex:1; overflow:hidden;">
     <div id="track">
       <div class="slide">
         <img src="images/01.jpg" alt="手順1">
@@ -164,8 +188,8 @@
       </div>
     </div>
 
-    <button class="nav-btn prev" id="prevBtn"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
-    <button class="nav-btn next" id="nextBtn"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></button>
+    <button class="nav-btn prev" id="prevBtn">‹</button>
+    <button class="nav-btn next" id="nextBtn">›</button>
 
     <div id="hint"><span>左右にスワイプして進んでください →</span></div>
   </div>
@@ -174,6 +198,135 @@
 </div>
 
 <script>
+/* ================= isometric map (1F, finalized) ================= */
+(function(){
+  const NS='http://www.w3.org/2000/svg';
+  const buildLayer=document.getElementById('buildLayer');
+  const startLayer=document.getElementById('startLayer');
+  const goalLayer=document.getElementById('goalLayer');
+  const routeLayer=document.getElementById('routeLayer');
+  const numsLayer=document.getElementById('numsLayer');
+
+  const TENANTS=[[[-430.0, 55.0], [-370.0, 55.0], [-370.0, 465.0], [-430.0, 465.0]], [[-480.0, -575.3339027699544], [-380.0, -575.3339027699544], [-380.0, -115.33390276995436], [-480.0, -115.33390276995436]], [[-530.3512497419188, 314.8537926645068], [-446.0863609988312, 385.5604297300261], [-529.6487502580812, 485.1462073354932], [-613.9136390011688, 414.4395702699739]], [[-245.0, 175.0], [-45.0, 175.0], [-45.0, 275.0], [-245.0, 275.0]], [[-245.0, 285.0], [85.0, 285.0], [85.0, 455.0], [-245.0, 455.0]], [[95.45006291883593, 286.54405640278594], [469.3639421147608, 286.54405640278594], [469.3639421147608, 456.54405640278594], [95.45006291883593, 456.54405640278594]], [[-25.203204980084024, 66.95399060040415], [468.8372713144194, 66.95399060040415], [468.8372713144194, 276.95399060040415], [-25.203204980084024, 276.95399060040415]], [[-245.0, 70.0], [-45.0, 70.0], [-45.0, 170.0], [-245.0, 170.0]], [[-612.5, 415.4774941164094], [-632.1792719210845, 358.7119952931276], [-654.0409278597058, 303.20649646984566], [-678.0849678158638, 248.96099764656378], [-704.3113917895586, 195.9754988232819], [-732.7201997807902, 144.25], [-763.3113917895586, 93.78450117671812], [-796.0849678158637, 44.579002353436266], [-831.0409278597057, -3.3664964698456856], [-868.1792719210844, -50.05199529312756], [-907.5, -95.47749411640942], [-979.3280433444177, -33.302481536495506], [-941.2772807528031, 10.624862773502578], [-755.4727958508357, -60.937821143592835], [-718.154004175423, -9.751144950545033], [-683.1408863292729, 42.816961955736524], [-650.4477864212685, 96.75], [-620.0869553256658, 152.0295740709263], [-592.0681982390449, 208.63587704453144], [-566.3986321582839, 266.54823677050194], [-543.0825669977007, 325.74569171211493], [-522.7408379529687, 384.36009016597063]], [[577.3998181690931, 344.386111196764], [697.3998181690931, 344.386111196764], [697.3998181690931, 444.386111196764], [577.3998181690931, 444.386111196764]], [[577.3998181690931, 113.50393992625405], [697.3998181690931, 113.50393992625405], [697.3998181690931, 333.503939926254], [577.3998181690931, 333.503939926254]], [[577.3998181690931, -33.11388880323602], [697.3998181690931, -33.11388880323602], [697.3998181690931, 106.88611119676398], [577.3998181690931, 106.88611119676398]], [[620.0, -225.0], [700.0, -225.0], [700.0, -135.0], [620.0, -135.0]], [[296.19999579683156, -576.2610902627359], [296.19999579683156, -319.17287182721697], [836.1999957968314, -579.1728718272169]], [[-311.74682810879335, -571.103319417229], [-311.74682810879335, -149.1728718272169], [38.25317189120665, -260.98603834221876], [38.25317189120665, -579.1728718272169]], [[46.3395897639015, -571.3818065716305], [46.3395897639015, -259.17287182721714], [256.3395897639015, -316.5765317677952], [256.3395897639015, -579.1728718272171]], [[-499.99999999999994, -579.0740679087746], [-499.99999999999994, -109.07406790877462], [-700.0, -225.3398260495315], [-700.0, -419.890108496878]], [[357.8659459226604, -0.6930324419462295], [560.9448676244119, -0.6930324419462295], [560.9448676244119, -280.77064612289564], [306.67435306326956, -198.50672410877496]], [[722.794467580706, -310.84887163550195], [722.794467580706, 482.12200780917567], [877.2055324192941, 482.12200780917567], [877.2055324192941, -478.12200780917567]]];
+  const WALLS=[[[-532.2917218555685, 484.6076567090728], [-372.29172185556854, 484.6076567090728], [-372.29172185556854, 494.6076567090728], [-532.2917218555685, 494.6076567090728]], [[-255.0, 485.0], [475.0, 485.0], [475.0, 495.0], [-255.0, 495.0]], [[-616.8301270189222, 417.9774941164094], [-911.8301270189221, -92.97749411640942], [-903.1698729810778, -97.97749411640939], [-608.1698729810779, 412.9774941164094]], [[585.0, 485.0], [875.0, 485.0], [875.0, 495.0], [585.0, 495.0]], [[-489.13, -586.21], [810.87, -586.21], [810.87, -576.21], [-489.13, -576.21]], [[-941.83, -562.0], [-461.83000000000004, -562.0], [-461.83000000000004, -552.0], [-941.83, -552.0]]];
+  const NUMBERS_WORLD={"1": [-660, 470], "2": [-488, 602], "3": [-334, 601.1997381002818], "4": [-334, 267], "5": [-337.23869263060794, -8.220819514563573], "6": [50, -150], "7": [250, -200], "8": [500, -300]};
+  const START_IDX=2, GOAL_IDX=12;
+  const ROT_Z = -30.160426980844356 * Math.PI/180;
+  const ROT_X_DEG = 27;
+  const TENANT_H_FULL=95, TENANT_H_HALF=47.5, WALL_H=45, ROUTE_Z_BASE=110;
+
+  const cfg={startColor:"#5fe1ff", startWidth:5.1, goalColor:"#e56cff", goalWidth:5.1,
+             numSize:40, curSize:64, routeWidth:7.5, routeColor:"#5fe1ff", tenantColor:"#545454"};
+  const routePts=[[-258, 370], [-291, 450], [-104, 391], [48, 330], [-242, 101], [-133, -5], [116, -124], [369, -283], [475, -184]];
+  const numPos={1:{tx:-301, ty:456}, 2:{tx:-116, ty:399}, 3:{tx:57, ty:334}, 4:{tx:-83, ty:202}, 5:{tx:-233, ty:89}, 6:{tx:-133, ty:-15}, 7:{tx:112, ty:-118}, 8:{tx:356, ty:-265}};
+
+  document.documentElement.style.setProperty('--tenantColor', cfg.tenantColor);
+
+  function project(x,y,z){
+    const rotX = ROT_X_DEG*Math.PI/180;
+    const x1 = x*Math.cos(ROT_Z) - y*Math.sin(ROT_Z);
+    const y1 = x*Math.sin(ROT_Z) + y*Math.cos(ROT_Z);
+    const z2 = y1*Math.sin(rotX) + z*Math.cos(rotX);
+    return [x1, z2];
+  }
+  function edges(pts,h){
+    const top = pts.map(p=>project(p[0],p[1],h));
+    const bot = pts.map(p=>project(p[0],p[1],0));
+    const lines=[];
+    for(let i=0;i<pts.length;i++){
+      const j=(i+1)%pts.length;
+      lines.push([bot[i],bot[j]]);
+      lines.push([top[i],top[j]]);
+      lines.push([bot[i],top[i]]);
+    }
+    return {lines, top};
+  }
+  function el(tag,attrs){
+    const e=document.createElementNS(NS,tag);
+    for(const k in attrs) e.setAttribute(k,attrs[k]);
+    return e;
+  }
+
+  function renderBuildings(){
+    TENANTS.forEach((pts,idx)=>{
+      if(idx===START_IDX || idx===GOAL_IDX) return;
+      const {lines, top} = edges(pts, TENANT_H_HALF);
+      lines.forEach(([a,b])=>{
+        buildLayer.appendChild(el('line',{class:'neon-line', x1:a[0],y1:a[1],x2:b[0],y2:b[1]}));
+      });
+      buildLayer.appendChild(el('polygon',{class:'neon-top-outline', points:top.map(p=>p.join(',')).join(' ')}));
+    });
+    WALLS.forEach(pts=>{
+      const {lines, top} = edges(pts, WALL_H);
+      lines.forEach(([a,b])=>{
+        buildLayer.appendChild(el('line',{class:'neon-line-dim', x1:a[0],y1:a[1],x2:b[0],y2:b[1]}));
+      });
+      buildLayer.appendChild(el('polygon',{class:'neon-top-outline-dim', points:top.map(p=>p.join(',')).join(' ')}));
+    });
+  }
+
+  function renderBlock(layer, idx, color, width){
+    const pts = TENANTS[idx];
+    const top = pts.map(p=>project(p[0],p[1],TENANT_H_FULL));
+    const bot = pts.map(p=>project(p[0],p[1],0));
+    for(let i=0;i<pts.length;i++){
+      const j=(i+1)%pts.length;
+      const face=[bot[i],bot[j],top[j],top[i]];
+      layer.appendChild(el('polygon',{points:face.map(p=>p.join(',')).join(' '), fill:color, 'fill-opacity':0.35, stroke:color,
+        'stroke-width':width, style:`filter:drop-shadow(0 0 ${4+width*2}px ${color}cc)`}));
+    }
+    layer.appendChild(el('polygon',{points:top.map(p=>p.join(',')).join(' '), fill:color, 'fill-opacity':0.55, stroke:color,
+      'stroke-width':width, style:`filter:drop-shadow(0 0 ${4+width*2}px ${color}cc)`}));
+  }
+
+  function renderRoute(){
+    const ptsStr = routePts.map(p=>p.join(',')).join(' ');
+    routeLayer.appendChild(el('polyline',{points:ptsStr, fill:'none', stroke:cfg.routeColor, 'stroke-width':cfg.routeWidth*2.3, 'stroke-linecap':'round', opacity:'0.22', style:'filter:blur(5px)'}));
+    routeLayer.appendChild(el('polyline',{points:ptsStr, fill:'none', stroke:cfg.routeColor, 'stroke-width':cfg.routeWidth, 'stroke-dasharray':'2 11', 'stroke-linecap':'round'}));
+  }
+
+  const pinEls={};
+  function renderNums(){
+    for(let n=1;n<=8;n++){
+      const [wx,wy] = NUMBERS_WORLD[n];
+      const [bx,by] = project(wx,wy,ROUTE_Z_BASE);
+      const st = numPos[n];
+      const r = cfg.numSize;
+      numsLayer.appendChild(el('line',{class:'num-leader', x1:bx,y1:by,x2:st.tx,y2:st.ty,
+        stroke:'rgba(95,225,255,.5)', 'stroke-width':1.4, 'stroke-dasharray':'1.5 3'}));
+      const grp=el('g',{class:'pin', transform:`translate(${st.tx},${st.ty})`});
+      grp.appendChild(el('circle',{class:'halo', r:r+8}));
+      grp.appendChild(el('circle',{r:r}));
+      const t=el('text',{'dominant-baseline':'central', y:1, style:`font-size:${r*0.86}px`});
+      t.textContent=n;
+      grp.appendChild(t);
+      numsLayer.appendChild(grp);
+      pinEls[n]=grp;
+    }
+  }
+
+  renderBuildings();
+  renderBlock(startLayer, START_IDX, cfg.startColor, cfg.startWidth);
+  renderBlock(goalLayer, GOAL_IDX, cfg.goalColor, cfg.goalWidth);
+  renderRoute();
+  renderNums();
+
+  let curPinN = null;
+  window.setMapCurrent = function(stepNum){
+    // stepNum: 1-13. Map only covers 1F (1-8). For 9-13 (B1) no pin is highlighted yet.
+    if(curPinN!=null && pinEls[curPinN]){ pinEls[curPinN].classList.remove('current'); }
+    if(stepNum>=1 && stepNum<=8 && pinEls[stepNum]){
+      pinEls[stepNum].classList.add('current');
+      numsLayer.appendChild(pinEls[stepNum]); // bring to front
+      curPinN=stepNum;
+    } else {
+      curPinN=null;
+    }
+  };
+  window.setMapCurrent(1);
+})();
+
+/* ================= photo carousel ================= */
 (function(){
   const viewport = document.getElementById('viewport');
   const track = document.getElementById('track');
@@ -204,6 +357,7 @@
     curEl.textContent = index+1;
     prevBtn.disabled = index === 0;
     nextBtn.disabled = index === n-1;
+    if(window.setMapCurrent) window.setMapCurrent(index+1);
   }
 
   function goTo(i){
@@ -244,11 +398,6 @@
     hint.classList.add('hide');
     if(Math.abs(deltaX) > width*0.15){
       goTo(index + (deltaX < 0 ? 1 : -1));
-    } else if(Math.abs(deltaX) < 6){
-      // treated as a tap, not a swipe: right half -> next, left half -> prev
-      const rect = viewport.getBoundingClientRect();
-      const tapX = e.clientX - rect.left;
-      goTo(index + (tapX > rect.width/2 ? 1 : -1));
     } else {
       render(true);
     }
