@@ -108,7 +108,7 @@
     <div class="count"><span id="cur">1</span> / <span id="total">13</span></div>
   </header>
 
-  <div id="viewport" style="position:relative; flex:1; overflow:hidden;">
+  <div id="viewport" style="position:relative; flex:1; overflow:hidden; touch-action:none;">
     <div id="track">
       <div class="slide">
         <img src="images/01.jpg" alt="手順1">
@@ -244,6 +244,11 @@
     hint.classList.add('hide');
     if(Math.abs(deltaX) > width*0.15){
       goTo(index + (deltaX < 0 ? 1 : -1));
+    } else if(Math.abs(deltaX) < 6){
+      // treated as a tap, not a swipe: right half -> next, left half -> prev
+      const rect = viewport.getBoundingClientRect();
+      const tapX = e.clientX - rect.left;
+      goTo(index + (tapX > rect.width/2 ? 1 : -1));
     } else {
       render(true);
     }
