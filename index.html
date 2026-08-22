@@ -67,24 +67,22 @@
     padding:9px 22px; border-radius:999px; font-size:14px; letter-spacing:.05em;
     box-shadow:0 4px 16px rgba(79,211,255,.4);
   }
-  .caption{display:none;}
-
-  #captionBar{
-    flex:0 0 auto; z-index:4;
+  .caption{
+    position:absolute; left:12px; right:12px; top:12px; z-index:4;
     display:flex; align-items:flex-start; gap:10px;
-    background:rgba(20,21,23,.92);
-    border-top:1px solid rgba(255,255,255,.08);
-    border-bottom:1px solid rgba(255,255,255,.08);
-    padding:12px 16px;
+    background:rgba(0,0,0,.6); backdrop-filter:blur(6px);
+    border:1px solid rgba(255,255,255,.15);
+    border-radius:14px; padding:10px 14px;
+    box-shadow:0 4px 20px rgba(0,0,0,.35);
   }
-  #captionBar .num{
+  .caption .num{
     flex:0 0 auto; width:24px; height:24px; border-radius:50%;
     background:var(--accent); color:#04202a; font-weight:700; font-size:12px;
     display:flex; align-items:center; justify-content:center;
     margin-top:1px;
   }
-  #captionBar p{margin:0; font-size:16px; line-height:1.4; font-weight:600;}
-  #captionBar .en{display:block; font-size:13px; font-weight:400; opacity:.75; margin-top:3px;}
+  .caption p{margin:0; font-size:16px; line-height:1.4; font-weight:600;}
+  .caption .en{display:block; font-size:13px; font-weight:400; opacity:.75; margin-top:3px;}
 
   footer{
     position:relative; z-index:5; padding:10px 0 max(14px, env(safe-area-inset-bottom));
@@ -132,11 +130,6 @@
         <g id="numsLayer"></g>
       </g>
     </svg>
-  </div>
-
-  <div id="captionBar">
-    <span class="num" id="capNum">1</span>
-    <p id="capText"></p>
   </div>
 
   <div id="viewport" style="position:relative; flex:1; overflow:hidden; touch-action:none;">
@@ -366,9 +359,6 @@
   }
   const dots = dotsWrap.querySelectorAll('.dot');
 
-  const capNum = document.getElementById('capNum');
-  const capText = document.getElementById('capText');
-
   function render(animate){
     track.classList.toggle('dragging', !animate);
     track.style.transform = 'translateX(' + (-index * width) + 'px)';
@@ -377,9 +367,6 @@
     prevBtn.disabled = index === 0;
     nextBtn.disabled = index === n-1;
     if(window.setMapCurrent) window.setMapCurrent(index+1);
-    const srcCap = slides[index].querySelector('.caption');
-    capNum.textContent = srcCap.querySelector('.num').textContent;
-    capText.innerHTML = srcCap.querySelector('p').innerHTML;
   }
 
   function goTo(i){
